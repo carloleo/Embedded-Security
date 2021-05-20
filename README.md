@@ -1,1 +1,1 @@
-# Embedded-Security
+#  HW & embedded security project
