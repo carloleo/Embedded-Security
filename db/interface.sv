@@ -78,7 +78,20 @@ always @ (posedge clk or negedge rst_n) begin
     end else if(!state && M_valid && counter > 1'd0) begin
         counter <= counter - 1'd1;
         H_main <= H_main_w_o;
-    end //else if(state && counter === 1'd0)
+    end else if(state && counter === 1'd0) //test final round
+        digest <= H_main;
+        counter <= 0;
+        state <= 0;
+        H_main[0] <= h0_value;
+        H_main[1] <= h1_value;
+        H_main[2] <= h2_value;
+        H_main[3] <= h3_value;
+        H_main[4] <= h4_value;
+        H_main[5] <= h5_value;
+        H_main[6] <= h6_value;
+        H_main[7] <= h7_value;
+
+        hash_ready = 1'd1; //after other assign
  end
 
 
