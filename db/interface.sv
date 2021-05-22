@@ -80,7 +80,6 @@ always @ (posedge clk or negedge rst_n) begin
         H_main <= H_main_w_o;
     end else if(state && counter === 1'd0) //test final round
         digest <= {H_main[0], H_main[1], H_main[2], H_main[3], H_main[4], H_main[5], H_main[6], H_main[7]};
-        counter <= 0;
         state <= 0;
         H_main[0] <= h0_value;
         H_main[1] <= h1_value;
@@ -90,8 +89,7 @@ always @ (posedge clk or negedge rst_n) begin
         H_main[5] <= h5_value;
         H_main[6] <= h6_value;
         H_main[7] <= h7_value;
-
-        hash_ready = 1'd1; //after other assign
+        hash_ready <= 1'd1; 
  end
 
 
