@@ -45,14 +45,6 @@ hashRound hashRound_i (
     .h(H_main),
     .h_out(digest)
 )*/
-localparam h0_value = 4'h4;
-localparam h1_value = 4'hB;
-localparam h2_value = 4'h7;
-localparam h3_value = 4'h1;
-localparam h4_value = 4'hD;
-localparam h5_value = 4'hF;
-localparam h6_value = 4'h0;
-localparam h7_value = 4'h3;
 
 
 
@@ -75,10 +67,10 @@ always @ (posedge clk or negedge rst_n) begin
         counter <= C_in - 1'd1;
         C <= C_in;
         H_main <= H_main_w_o;
-    end else if(!state && M_valid && counter > 1'd0) begin
+    end else if(!state && M_valid && counter > 1) begin
         counter <= counter - 1'd1;
         H_main <= H_main_w_o;
-    end else if(state && counter === 1'd0) //test final round
+    end else if(state && counter === 1) begin //test final round
         digest <= {H_main[0], H_main[1], H_main[2], H_main[3], H_main[4], H_main[5], H_main[6], H_main[7]};
         state <= 0;
         H_main[0] <= h0_value;
@@ -90,6 +82,7 @@ always @ (posedge clk or negedge rst_n) begin
         H_main[6] <= h6_value;
         H_main[7] <= h7_value;
         hash_ready <= 1'd1; 
+    end
  end
 
 
