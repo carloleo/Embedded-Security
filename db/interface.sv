@@ -254,11 +254,83 @@ Sbox sbox (
         
     end
 endmodule
-
-/*module hashRound_final (
+/*
+module hashRound_final (
     input [5 : 0] idx [0 : 7], //S-box input
     input [3 : 0] h [0 : 7],
     output [3 : 0] h_out [0 : 7] //8 signal of 4 bits
 );
+
+
+endmodule
+
+module main_iteration  (
+    input [5 : 0] idx, 
+    input [3 : 0] h [0 : 7],
+    output reg [3 : 0] h_out [0 : 7] 
+);
+wire [3 : 0] h1 [0 : 7];
+wire [3 : 0] h2 [0 : 7];
+wire [3 : 0] h3 [0 : 7];
+
+hashRound hashRound_1 (
+    .idx (idx),
+    .h (h),
+    .h_out(h1)
+);
+
+hashRound hashRound_2 (
+    .idx (idx),
+    .h (h1),
+    .h_out(h2)
+);
+
+hashRound hashRound_3 (
+    .idx (idx),
+    .h (h2),
+    .h_out(h3)
+);
+
+hashRound hashRound_4 (
+    .idx (idx),
+    .h (h3),
+    .h_out(h_out)
+);
+endmodule
+
+module final_iteration  (
+    input [5 : 0] idx, 
+    input [3 : 0] h [0 : 7],
+    output reg [3 : 0] h_out [0 : 7] 
+);
+wire [3 : 0] h1 [0 : 7];
+wire [3 : 0] h2 [0 : 7];
+wire [3 : 0] h3 [0 : 7];
+
+hashRound hashRound_final_1 (
+    .idx (idx),
+    .h (h),
+    .h_out(h1)
+);
+
+hashRound hashRound_final_2 (
+    .idx (idx),
+    .h (h1),
+    .h_out(h2)
+);
+
+hashRound hashRound_final_3 (
+    .idx (idx),
+    .h (h2),
+    .h_out(h3)
+);
+
+hashRound hashRound_final_4 (
+    .idx (idx),
+    .h (h3),
+    .h_out(h_out)
+);
+endmodule
     
-endmodule*/
+
+*/
