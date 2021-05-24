@@ -48,13 +48,12 @@ hashRound hashRound_i (
 hashRound_final hashRound_f(
     .C (C),
     .h(H_main),
-    .h_out(digest)
+    .digest(digest)
 );
 
 
 always @(posedge clk or negedge rst_n) begin
 	
-
     if (!rst_n) begin
         counter <= 0;
         hash_ready <= 0;
@@ -74,7 +73,6 @@ always @(posedge clk or negedge rst_n) begin
     end else if(!state && M_valid && counter >= 1) begin
         
 		if(counter === 1)begin
-			
 			state <= 1;
 		end
 		counter <= counter - 1;
@@ -267,12 +265,13 @@ endmodule
 module hashRound_final (
     input [63 : 0] C, //Used for computing S-box input
     input [3 : 0] h [0 : 7],
-    output reg [3 : 0] h_out [0 : 7] //8 signal of 4 bits
+    output [31 : 0] digest //8 signal of 4 bits
 );
 wire s_value;
 reg [7 : 0] Ci;
 reg [5 : 0] idx;
 reg [3 : 0] tmp;
+reg [3 : 0] h_out [0 : 7];
 Sbox sbox (
     .in (idx),
     .out(s_value)
@@ -318,6 +317,8 @@ Sbox sbox (
         idx = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};     
         tmp = h[0] ^ s_value;
         h_out[7] = tmp << 3;
+
+        digest = {h_out[0], h_out[1], h_out[2], h_out[3], h_out[4], h_out[5], h_out[6]};
     end
 
 endmodule
