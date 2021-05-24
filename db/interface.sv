@@ -89,7 +89,7 @@ always @(posedge clk or negedge rst_n) begin
         H_main[5] <= h5_value;
         H_main[6] <= h6_value;
         H_main[7] <= h7_value;
-     end else if (state === 2 &&) begin //
+     end else if (state === 2) begin //
          hash_ready <= 1; //fianl round computed 
          state <= 0;
          counter <= 0;
