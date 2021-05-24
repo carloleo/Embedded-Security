@@ -66,7 +66,7 @@ end*/
 
 always @(posedge clk or negedge rst_n) begin
 	
-	//$display("Counter: %d | M_Valid: %b | State: %b",counter, M_valid, state);	
+	
 	
     if (!rst_n) begin
         counter <= 0;
@@ -85,14 +85,14 @@ always @(posedge clk or negedge rst_n) begin
         C <= C_in;
         H_main <= H_main_w_o;
     end else if(!state && M_valid && counter >= 1) begin
-        //$display("Stampa qua");
+        
 		if(counter === 1)begin
-			//$display("Stampa 2");
+			
 			state <= 1;
 		end
 		counter <= counter - 1;
         H_main <= H_main_w_o;
-		//$display("Counter_IN: %d", counter);
+		
     end else if(state && counter === 0) begin //test final round
 		digest <= {H_main[0], H_main[1], H_main[2], H_main[3], H_main[4], H_main[5], H_main[6], H_main[7]};
         counter <= 0;
@@ -106,7 +106,7 @@ always @(posedge clk or negedge rst_n) begin
         H_main[6] <= h6_value;
         H_main[7] <= h7_value;
         hash_ready <= 1; //after other assign
-		//$display("Ferrari succhiacazzi");
+		
 		end
  end
 
