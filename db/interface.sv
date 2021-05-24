@@ -44,30 +44,17 @@ hashRound hashRound_i (
     .h (H_main ),
     .h_out(H_main_w_o)
 );
-/*hashRound_final hashRound_f(
-    .idx (C6),
+
+hashRound_final hashRound_f(
+    .C (C),
     .h(H_main),
     .h_out(digest)
-)*/
+);
 
-logic [63 : 0] tmp;
-
-/*always @ (*) begin
-
-	if(counter === 0 && M_valid)begin
-		tmp = C_in - 1;
-	end
-	else if(M_valid) begin
-		//state = 1;
-		tmp = tmp - 1;
-	end
-
-end*/
 
 always @(posedge clk or negedge rst_n) begin
 	
-	
-	
+
     if (!rst_n) begin
         counter <= 0;
         hash_ready <= 0;
@@ -231,7 +218,9 @@ module Sbox (
         endcase
     end
 endmodule
-    
+
+
+ 
 
 module hashRound (
     input [5 : 0] idx, //S-box input
@@ -274,16 +263,67 @@ Sbox sbox (
 endmodule
 
 
-/*
-module hashRound_final (
-    input [5 : 0] idx [0 : 7], //S-box input
-    input [3 : 0] h [0 : 7],
-    output [3 : 0] h_out [0 : 7] //8 signal of 4 bits
-);
 
+module hashRound_final (
+    input [63 : 0] C, //Used for computing S-box input
+    input [3 : 0] h [0 : 7],
+    output reg [3 : 0] h_out [0 : 7] //8 signal of 4 bits
+);
+wire s_value;
+reg [7 : 0] Ci;
+reg [5 : 0] idx;
+reg [3 : 0] tmp;
+Sbox sbox (
+    .in (idx),
+    .out(s_value)
+);
+    always @(*) begin
+        //h[0]
+        Ci = C[7 : 0];
+        idx = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
+        tmp = h[1] ^ s_value;
+        h_out[0] = tmp;
+        //h[1]
+        Ci = C[15 : 8];
+        idx = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
+        tmp = h[2] ^ s_value;
+        h_out[1] = tmp;
+        //h[2]
+        Ci = C[23 : 16];
+        idx = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
+        tmp = h[3] ^ s_value;
+        h_out[2] = tmp << 1;
+        //3
+        Ci = C[31 : 24];
+        idx = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
+        tmp = h[4] ^ s_value;
+        h_out[3] = tmp << 1;
+        //4
+        Ci = C[39 : 32];
+        idx = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
+        tmp = h[5] ^ s_value;
+        h_out[4] = tmp << 2;
+        //5
+        Ci = C[47 : 40];
+        idx = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
+        tmp = h[6] ^ s_value;
+        h_out[5] = tmp << 2;
+        //6
+        Ci = C[55 : 48];
+        idx = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
+        tmp = h[7] ^ s_value;
+        h_out[6] = tmp << 3;
+        //7 
+        Ci = C[63 : 56];
+        idx = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};     
+        tmp = h[0] ^ s_value;
+        h_out[7] = tmp << 3;
+    end
 
 endmodule
 
+
+/*
 module main_iteration  (
     input [5 : 0] idx, 
     input [3 : 0] h [0 : 7],
