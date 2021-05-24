@@ -265,7 +265,7 @@ endmodule
 module hashRound_final (
     input [63 : 0] C, //Used for computing S-box input
     input [3 : 0] h [0 : 7],
-    output [31 : 0] digest //8 signal of 4 bits
+    output reg [31 : 0] digest //8 signal of 4 bits
 );
 wire s_value;
 reg [7 : 0] Ci;
