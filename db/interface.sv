@@ -1,5 +1,6 @@
+//Per quartus: nome file.sv deve essere lo stesso del nome modulo
 
-module fullHashDES (
+module fullHashDES(
     input clk,
     input M_valid,
     input rst_n,
@@ -35,6 +36,9 @@ wire [3 : 0] H_main_w_o [0 : 7];
 reg [3 : 0] H_main [0 : 7];
 
 
+
+assign M6 = {M[3] ^ M[2],M[1],M[0],M[7],M[6],M[5] ^ M[4]};
+
 hashRound hashRound_i (
     .idx (M6),
     .h (H_main ),
@@ -45,41 +49,28 @@ hashRound hashRound_i (
     .h(H_main),
     .h_out(digest)
 )*/
-localparam h0_value = 4'h4;
-localparam h1_value = 4'hB;
-localparam h2_value = 4'h7;
-localparam h3_value = 4'h1;
-localparam h4_value = 4'hD;
-localparam h5_value = 4'hF;
-localparam h6_value = 4'h0;
-localparam h7_value = 4'h3;
 
+logic [63 : 0] tmp;
 
+/*always @ (*) begin
 
-assign M6 = {M[3] ^ M[2],M[1],M[0],M[7],M[6],M[5] ^ M[4]};
+	if(counter === 0 && M_valid)begin
+		tmp = C_in - 1;
+	end
+	else if(M_valid) begin
+		//state = 1;
+		tmp = tmp - 1;
+	end
 
-always @ (posedge clk or negedge rst_n) begin
+end*/
+
+always @(posedge clk or negedge rst_n) begin
+	
+	//$display("Counter: %d | M_Valid: %b | State: %b",counter, M_valid, state);	
+	
     if (!rst_n) begin
-            counter <= 0;
-            hash_ready <= 0;
-            state <= 0;
-            H_main[0] <= h0_value;
-            H_main[1] <= h1_value;
-            H_main[2] <= h2_value;
-            H_main[3] <= h3_value;
-            H_main[4] <= h4_value;
-            H_main[5] <= h5_value;
-            H_main[6] <= h6_value;
-            H_main[7] <= h7_value;
-    end else if(!state && M_valid) begin
-        counter <= C_in - 1'd1;
-        C <= C_in;
-        H_main <= H_main_w_o;
-    end else if(!state && M_valid && counter > 1'd0) begin
-        counter <= counter - 1'd1;
-        H_main <= H_main_w_o;
-    end else if(state && counter === 1'd0) //test final round
-        digest <= {H_main[0], H_main[1], H_main[2], H_main[3], H_main[4], H_main[5], H_main[6], H_main[7]};
+        counter <= 0;
+        hash_ready <= 0;
         state <= 0;
         H_main[0] <= h0_value;
         H_main[1] <= h1_value;
@@ -89,7 +80,34 @@ always @ (posedge clk or negedge rst_n) begin
         H_main[5] <= h5_value;
         H_main[6] <= h6_value;
         H_main[7] <= h7_value;
-        hash_ready <= 1'd1; 
+    end else if(!state && M_valid && !counter) begin
+        counter <= C_in - 1;
+        C <= C_in;
+        H_main <= H_main_w_o;
+    end else if(!state && M_valid && counter >= 1) begin
+        //$display("Stampa qua");
+		if(counter === 1)begin
+			//$display("Stampa 2");
+			state <= 1;
+		end
+		counter <= counter - 1;
+        H_main <= H_main_w_o;
+		//$display("Counter_IN: %d", counter);
+    end else if(state && counter === 0) begin //test final round
+		digest <= {H_main[0], H_main[1], H_main[2], H_main[3], H_main[4], H_main[5], H_main[6], H_main[7]};
+        counter <= 0;
+        state <= 0;
+        H_main[0] <= h0_value;
+        H_main[1] <= h1_value;
+        H_main[2] <= h2_value;
+        H_main[3] <= h3_value;
+        H_main[4] <= h4_value;
+        H_main[5] <= h5_value;
+        H_main[6] <= h6_value;
+        H_main[7] <= h7_value;
+        hash_ready <= 1; //after other assign
+		//$display("Ferrari succhiacazzi");
+		end
  end
 
 
@@ -132,7 +150,7 @@ module Sbox (
                         2'b10 :  out = 4'b0001;
                         2'b11 :  out = 4'b1100;
                     endcase
-            4'b0010 : case (row)
+            4'b0011 : case (row)
                         2'b00 :  out = 4'b0001; 
                         2'b01 :  out = 4'b1100;
                         2'b10 :  out = 4'b1011;
@@ -248,12 +266,14 @@ Sbox sbox (
         //6
         tmp = h[7] ^ s_value;
         h_out[6] = tmp << 3;
-        //7
+        //7      
         tmp = h[0] ^ s_value;
         h_out[7] = tmp << 3;
         
     end
 endmodule
+
+
 /*
 module hashRound_final (
     input [5 : 0] idx [0 : 7], //S-box input
