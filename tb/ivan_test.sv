@@ -42,7 +42,7 @@ reg [32 : 0] digest5;
     
     begin: STIMULI_1R
       C_in = 1'd26;
-      for(byte byte:_name = value; i = 0; i < 26; i++) begin
+      for(byte i = 1'b0; i < 26; i++) begin
         M = i;
         M_valid = 1'b1;
       end
@@ -53,7 +53,7 @@ reg [32 : 0] digest5;
         end
 
       C_in = 1'd25;
-      for(byte byte:_name = value; i = 0; i < 25; i++) begin
+      for(byte i = 1'b0; i < 25; i++) begin
         M = i;
         M_valid = 1'b1;
       end
@@ -64,7 +64,7 @@ reg [32 : 0] digest5;
         end
 
       C_in = 1'd26;
-      for(byte byte:_name = value; i = 0; i < 26; i++) begin
+      for(byte i = 1'b0; i < 26; i++) begin
         M = i;
         M_valid = 1'b1;
       end
@@ -83,33 +83,33 @@ reg [32 : 0] digest5;
     end: CHECK_1R
 
 
-  begin: STIMULI_2R
+    begin: STIMULI_2R
 
-      C_in = 1'd10;
-      for(byte byte:_name = value; i = 0; i < 20; i= i + 2) begin
-        M = i;
-        M_valid = 1'b1;
-      end
-
-      @(posedge clk);
-        if (hash_ready) begin
-          digest4 = digest_out;
-        end
-      
-      
-      C_in = 1'd10;
-      for(byte byte:_name = value; i = 0; i < 20; i++) begin
-        M = i;
-        M_valid = ~i[0];
-      end
-
-      @(posedge clk);
-        if (hash_ready) begin
-          digest5 = digest_out;
-          M_valid = 1'b0;
+        C_in = 1'd10;
+        for(byte i = 1'b0; i < 20; i= i + 2) begin
+          M = i;
+          M_valid = 1'b1;
         end
 
-      
+        @(posedge clk);
+          if (hash_ready) begin
+            digest4 = digest_out;
+          end
+        
+        
+        C_in = 1'd10;
+        for(byte i = 1'b0; i < 20; i++) begin
+          M = i;
+          M_valid = ~i[0];
+        end
+
+        @(posedge clk);
+          if (hash_ready) begin
+            digest5 = digest_out;
+            M_valid = 1'b0;
+          end
+
+        
     end: STIMULI_2R
     
     begin: CHECK_2R
@@ -117,11 +117,5 @@ reg [32 : 0] digest5;
       $display("digest4 %b %b %b %b %b %b %b %b", digest4[0], digest4[1], digest4[2], digest4[3], digest4[4], digest4[5], digest4[6], digest4[7]);
       $display("digest5 %b %b %b %b %b %b %b %b", digest5[0], digest5[1], digest5[2], digest5[3], digest5[4], digest5[5], digest5[6], digest5[7]);
     end: CHECK_2R
-
-  $stop
   end   
-    
-    
-    
-
 endmodule
