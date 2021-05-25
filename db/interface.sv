@@ -37,7 +37,7 @@ reg [3 : 0] H_main [0 : 7];
 
 
 
-assign M6 = {M[3] ^ M[2],M[1],M[0],M[7],M[6],M[5] ^ M[4]};
+//assign M6 = {M[3] ^ M[2],M[1],M[0],M[7],M[6],M[5] ^ M[4]};
 
 hashRound hashRound_i (
     .idx (M6),
@@ -51,6 +51,12 @@ hashRound_final hashRound_f(
     .digest(digest)
 );
 
+always @(*) begin
+    if(M_valid) begin
+        M6 = {M[3] ^ M[2],M[1],M[0],M[7],M[6],M[5] ^ M[4]};
+    end
+    
+end
 
 always @(posedge clk or negedge rst_n) begin
 	
