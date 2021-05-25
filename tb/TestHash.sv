@@ -59,6 +59,7 @@ fork
 		if(hash_ready)begin
 			$display("Digest: %b", digest);
 		end
+
 			
 	
 	end:TEST1
@@ -71,3 +72,5 @@ end
 endmodule
 // -----------------------------------------------------------------------------
 
+//for # Digest: 00000111000010001100100010000000	Digest: 0708c880 deciamle 118016128
+// 				00000011000010001100100010000000	Digest: 0308c880 decimale 50907264 

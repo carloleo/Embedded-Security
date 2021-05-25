@@ -39,11 +39,17 @@ reg [31 : 0] digest_final;
 
 //assign M6 = {M[3] ^ M[2],M[1],M[0],M[7],M[6],M[5] ^ M[4]};
 
-hashRound hashRound_i (
-    .idx (M6),
-    .h (H_main ),
+mainHashIteration main(
+    .idx(M6),
+    .h(H_main),
     .h_out(H_main_w_o)
 );
+
+//hashRound hashRound_i (
+//    .idx (M6),
+//    .h (H_main ),
+//    .h_out(H_main_w_o)
+//);
 
 hashRound_final hashRound_f(
     .C (C),
@@ -72,19 +78,17 @@ always @(posedge clk or negedge rst_n) begin
         H_main[5] <= h5_value;
         H_main[6] <= h6_value;
         H_main[7] <= h7_value;
-    end else if(!state && M_valid && !counter) begin
+    end else if(state === 0 && M_valid && !counter) begin
         counter <= C_in - 1;
         C <= C_in;
         H_main <= H_main_w_o;
-    end else if(!state && M_valid && counter >= 1) begin
-        
-		if(counter === 1)begin
+    end else if(state === 0 && counter >= 1) begin
+        if(counter === 1)begin
 			state <= 1;
 		end
 		counter <= counter - 1;
         H_main <= H_main_w_o;
-		
-    end else if(state && counter === 0) begin //test final round
+    end else if(state === 1 && counter === 0) begin //test final round
         counter <= 0;
         state <= 2; //added state in which final round is gonna be computed
         H_main[0] <= h0_value;
@@ -95,13 +99,13 @@ always @(posedge clk or negedge rst_n) begin
         H_main[5] <= h5_value;
         H_main[6] <= h6_value;
         H_main[7] <= h7_value;
-    end else if(!M_valid) begin //Wait until next message block
-        #0;
     end else if (state === 2) begin 
          hash_ready <= 1; //fianl round computed 
          state <= 0;
          counter <= 0;
          digest_final <= digest;
+    end else if(!M_valid) begin //Wait until next message block
+        #0;
     end
  end
 
@@ -334,6 +338,45 @@ Sbox sbox (
 
 endmodule
 
+module mainHashIteration (
+    input [5 : 0] idx,
+    input [3 : 0] h [0 : 7],
+    output [3 : 0] h_out [0 : 7]
+);
+
+wire [3 : 0] h1_in [0 : 7];
+wire [3 : 0] h1_out [0 : 7];
+hashRound round1 (
+    .idx(idx),
+    .h(h),
+    .h_out(h1_out)
+
+);
+wire [3 : 0] h2_out [0 : 7];
+
+hashRound round2 (
+    .idx(idx),
+    .h(h1_out),
+    .h_out(h2_out)
+);
+
+wire [3 : 0] h3_out [0 : 7];
+
+hashRound round3 (
+    .idx(idx),
+    .h(h2_out),
+    .h_out(h3_out)
+
+);
+
+hashRound round4 (
+    .idx(idx),
+    .h(h3_out),
+    .h_out(h_out)
+);
+
+    
+endmodule
 
 /*
 module main_iteration  (
