@@ -12,7 +12,7 @@ reg M_valid;
 reg hash_ready;
 reg [63 : 0] C_in;
 reg [7 : 0] M;
-reg [32 : 0] digest;
+reg [31 : 0] digest;
 
 fullHashDES test_hash (
      .clk           (clk)
@@ -36,20 +36,21 @@ end
 
 initial begin
 
-$display("inizio");
 C_in = 64'd50;
 
 fork
 
 	begin: TEST1
-		M_valid = 1'b1;
+		M_valid = 1'b0;
 		
-		$display("Inizio TEST1");
 		@(reset_deassertion);
 		@(posedge clk);
 		
 		for(i=0;i<C_in;i++)begin
+			M_valid = 1'b1;
 			M = i;
+			@(posedge clk);
+			M_valid = 1'b0;
 			@(posedge clk);
 		end
 		

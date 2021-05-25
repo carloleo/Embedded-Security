@@ -7,7 +7,7 @@ module fullHashDES(
     input [63 : 0] C_in, //length 
     input [7 : 0] M,
     output reg hash_ready,
-    output reg [32 : 0] digest
+    output reg [31 : 0] digest
 );
 //constants 
 localparam h0_value = 4'h4;
@@ -28,14 +28,14 @@ reg [3 : 0] h [0 : 7];
 //circuit state
 reg[1 : 0] state;
 //message reduction to 6 bit
-wire [5 : 0] M6;
+reg [5 : 0] M6;
 //s-box input at last round
 wire [5 : 0] C6 [0 : 7];
 //to store h[i] values
 wire [3 : 0] H_main_w_o [0 : 7];
 reg [3 : 0] H_main [0 : 7];
 
-
+reg [31 : 0] digest_final;
 
 //assign M6 = {M[3] ^ M[2],M[1],M[0],M[7],M[6],M[5] ^ M[4]};
 
@@ -95,10 +95,13 @@ always @(posedge clk or negedge rst_n) begin
         H_main[5] <= h5_value;
         H_main[6] <= h6_value;
         H_main[7] <= h7_value;
-     end else if (state === 2) begin //
+    end else if(!M_valid) begin //Wait until next message block
+        #0;
+    end else if (state === 2) begin 
          hash_ready <= 1; //fianl round computed 
          state <= 0;
          counter <= 0;
+         digest_final <= digest;
     end
  end
 
@@ -233,12 +236,13 @@ module hashRound (
     output reg [3 : 0] h_out [0 : 7] //8 signal of 4 bits
 );
 wire [3 : 0] s_value;
-reg [3 : 0] tmp;
+reg [3 : 0] tmp; 
 Sbox sbox (
     .in (idx),
     .out(s_value)
 );
     always @(*) begin
+           
         //h[0]
         tmp = h[1] ^ s_value;
         h_out[0] = tmp;
@@ -274,7 +278,7 @@ module hashRound_final (
     input [3 : 0] h [0 : 7],
     output reg [31 : 0] digest //8 signal of 4 bits
 );
-wire s_value;
+reg [3 : 0] s_value;
 reg [7 : 0] Ci;
 reg [5 : 0] idx;
 reg [3 : 0] tmp;
