@@ -7,7 +7,7 @@ module fullHashDES(
     input [63 : 0] C_in, //length 
     input [7 : 0] M,
     output reg hash_ready,
-    output reg [31 : 0] digest
+    output reg [31 : 0] digest_final
 );
 //constants 
 localparam h0_value = 4'h4;
@@ -35,7 +35,7 @@ wire [5 : 0] C6 [0 : 7];
 wire [3 : 0] H_main_w_o [0 : 7];
 reg [3 : 0] H_main [0 : 7];
 
-reg [31 : 0] digest_final;
+reg [31 : 0] digest;
 
 //assign M6 = {M[3] ^ M[2],M[1],M[0],M[7],M[6],M[5] ^ M[4]};
 
