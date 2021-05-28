@@ -117,5 +117,27 @@ reg [32 : 0] digest5;
       $display("digest4 %b %b %b %b %b %b %b %b", digest4[0], digest4[1], digest4[2], digest4[3], digest4[4], digest4[5], digest4[6], digest4[7]);
       $display("digest5 %b %b %b %b %b %b %b %b", digest5[0], digest5[1], digest5[2], digest5[3], digest5[4], digest5[5], digest5[6], digest5[7]);
     end: CHECK_2R
+
+    begin: STIMULI_3R
+        
+        byte message [1] = {1'd1};
+        C_in = 1'd1;
+        for(byte i = 1'b0; i < 20; i= i + 2) begin
+          M = i;
+          M_valid = 1'b1;
+        end
+
+        @(posedge clk);
+          if (hash_ready) begin
+            digest4 = digest_out;
+          end
+        
+        
+    end: STIMULI_3R
+    
+    begin: CHECK_3R
+      @(posedge clk);
+      $display("digest4 %b %b %b %b %b %b %b %b", digest4[0], digest4[1], digest4[2], digest4[3], digest4[4], digest4[5], digest4[6], digest4[7]);
+    end: CHECK_3R
   end   
 endmodule
