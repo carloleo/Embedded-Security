@@ -1,6 +1,6 @@
 import bitarray
 from bitarray import *
-from bitarray.util import int2ba
+from bitarray.util import *
 
 
 def newh():
@@ -50,10 +50,10 @@ S_box = {
     '010011': '0000',
     '110010': '1001',
     '110011': '1111',
-    '01010 0': '0011',
-    '01010 1': '1111',
-    '11010 0': '1100',
-    '11010 1': '0000',
+    '010100': '0011',
+    '010101': '1111',
+    '110100': '1100',
+    '110101': '0000',
     '010110': '1111',
     '010111': '1100',
     '110110': '0101',
@@ -88,7 +88,7 @@ def main_round(M, H):
     H1 = list.copy(H)
     for r in range(0, 4):
         for i in range(0, 8):
-            H1[i] = (H[(i + 1) % 8] ^ S(M6)) << i // 2
+            H1[i] = (H[(i + 1) % 8] ^ S(M6)) << (i // 2)
             H = list.copy(H1)
     return H
 
@@ -97,9 +97,10 @@ def final_round(C, H):
     H1 = list.copy(H)
     C = [(C >> i * 8) % 256 for i in range(7, -1, -1)]
     C = [int2ba(c, 8) for c in C]
+    print(C)
     for i in range(0, 8):
         C6 = bitarray([C[i][7] ^ C[i][1], C[i][3], C[i][2], C[i][5] ^ C[i][0], C[i][4], C[i][6]])
-        H1[i] = (H[(i + 1) % 8] ^ S(C6)) << i // 2
+        H1[i] = (H[(i + 1) % 8] ^ S(C6)) << (i // 2)
         H = list.copy(H1)
     return H
 
@@ -111,5 +112,17 @@ def full_hash(message):
     C = len(message)
     return final_round(C, H)
 
+def string_to_hash(message):
+    message = [ord(c) for c in message]
+    return full_hash(message)
 
-#print(full_hash([1, 2, 3, 4]))
+def digest_to_hex(digest):
+    tmp = bitarray()
+    for a in digest:
+        tmp.extend(a)
+    return ba2hex(tmp)
+
+print(int2ba(290, 64))
+#print(full_hash([]))
+print(string_to_hash("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
+print(int2ba(0x2DD9905C))
