@@ -75,7 +75,9 @@ S_box = {
     '111110': '1110',
     '111111': '0011',
 }
-
+def cshift(v, n):
+    rs = 4 - n
+    return (v << n) | (v >> rs)
 
 def S(i):
     return bitarray(S_box[i.to01()])
@@ -88,8 +90,8 @@ def main_round(M, H):
     H1 = list.copy(H)
     for r in range(0, 4):
         for i in range(0, 8):
-            H1[i] = (H[(i + 1) % 8] ^ S(M6)) << (i // 2)
-            H = list.copy(H1)
+            H1[i] = cshift(H[(i + 1) % 8] ^ S(M6), i // 2)
+        H = list.copy(H1)
     return H
 
 
@@ -97,12 +99,12 @@ def final_round(C, H):
     H1 = list.copy(H)
     C = [(C >> i * 8) % 256 for i in range(7, -1, -1)]
     C = [int2ba(c, 8) for c in C]
-    print(C)
+    #print(C)
     for i in range(0, 8):
         C6 = bitarray([C[i][7] ^ C[i][1], C[i][3], C[i][2], C[i][5] ^ C[i][0], C[i][4], C[i][6]])
-        H1[i] = (H[(i + 1) % 8] ^ S(C6)) << (i // 2)
-        H = list.copy(H1)
-    return H
+        H1[i] = cshift(H[(i + 1) % 8] ^ S(C6), i//2)
+
+    return H1
 
 
 def full_hash(message):
@@ -110,10 +112,12 @@ def full_hash(message):
     for M in message:
         H = main_round(M, H)
     C = len(message)
+    print(len(message))
     return final_round(C, H)
 
 def string_to_hash(message):
     message = [ord(c) for c in message]
+    print(message)
     return full_hash(message)
 
 def digest_to_hex(digest):
@@ -122,7 +126,20 @@ def digest_to_hex(digest):
         tmp.extend(a)
     return ba2hex(tmp)
 
-print(int2ba(290, 64))
+""""zero = bitarray('00000001')
+C = zero
+C6 = bitarray([C[7] ^ C[1], C[3], C[2], C[5] ^ C[0], C[4], C[6]])
+s0 = S(C6)
+c7 = int2ba(0x4, 4) ^ s0
+print(cshift(c7, 3))
+print(final_round(0, newh()))"""
 #print(full_hash([]))
-print(string_to_hash("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
-print(int2ba(0x2DD9905C))
+#print(int2ba(0x956F7883))
+##print(string_to_hash("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
+##print(int2ba(0x2DD9905C))
+print(string_to_hash("Messaggio in chiaro di prova"))
+print(int2ba((0x95C587D7)))
+"""
+print(int2ba(ord('a'), 8))
+print(main_round(ord('a'), newh()))
+print(S_box['110100'])"""

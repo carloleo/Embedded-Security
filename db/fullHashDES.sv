@@ -57,12 +57,12 @@ hashRound_final hashRound_f(
     .digest(digest)
 );
 
-always @(*) begin
+/*always @(*) begin
     if(M_valid) begin
         M6 = {M[3] ^ M[2],M[1],M[0],M[7],M[6],M[5] ^ M[4]};
     end
     
-end
+end*/
 
 always @(posedge clk or negedge rst_n) begin
 	
@@ -78,16 +78,19 @@ always @(posedge clk or negedge rst_n) begin
         H_main[5] <= h5_value;
         H_main[6] <= h6_value;
         H_main[7] <= h7_value;
+    end else if(!M_valid && counter > 0) begin //Wait until next message block
+        #0;
     end else if(state === 0 && M_valid && !counter) begin
-        counter <= C_in - 1;
+        counter <= C_in;
         C <= C_in;
-        H_main <= H_main_w_o;
+        M6 <= {M[3] ^ M[2],M[1],M[0],M[7],M[6],M[5] ^ M[4]};
     end else if(state === 0 && counter >= 1) begin
         if(counter === 1)begin
 			state <= 1;
 		end
 		counter <= counter - 1;
         H_main <= H_main_w_o;
+        M6 = {M[3] ^ M[2],M[1],M[0],M[7],M[6],M[5] ^ M[4]};
     end else if(state === 1 && counter === 0) begin //test final round
         counter <= 0;
         state <= 2; //added state in which final round is gonna be computed
@@ -100,13 +103,11 @@ always @(posedge clk or negedge rst_n) begin
         H_main[6] <= h6_value;
         H_main[7] <= h7_value;
     end else if (state === 2) begin 
-         hash_ready <= 1; //fianl round computed 
+         hash_ready <= 1; //final round computed 
          state <= 0;
          counter <= 0;
          digest_final <= digest;
-    end else if(!M_valid) begin //Wait until next message block
-        #0;
-    end
+    end 
  end
 
 
@@ -255,22 +256,22 @@ Sbox sbox (
         h_out[1] = tmp;
         //h[2]
         tmp = h[3] ^ s_value;
-        h_out[2] = tmp << 1;
+        h_out[2] = tmp << 1 | tmp >> 3;
         //3
         tmp = h[4] ^ s_value;
-        h_out[3] = tmp << 1;
+        h_out[3] = tmp << 1 | tmp >> 3;
         //4
         tmp = h[5] ^ s_value;
-        h_out[4] = tmp << 2;
+        h_out[4] = tmp << 2 | tmp >> 2;
         //5
         tmp = h[6] ^ s_value;
-        h_out[5] = tmp << 2;
+        h_out[5] = tmp << 2 | tmp >> 2;
         //6
         tmp = h[7] ^ s_value;
-        h_out[6] = tmp << 3;
+        h_out[6] = tmp << 3 | tmp >> 1;
         //7      
         tmp = h[0] ^ s_value;
-        h_out[7] = tmp << 3;
+        h_out[7] = tmp << 3 | tmp >> 1;
         
     end
 endmodule
@@ -306,32 +307,32 @@ Sbox sbox (
         Ci = C[23 : 16];
         idx = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
         tmp = h[3] ^ s_value;
-        h_out[2] = tmp << 1;
+        h_out[2] = tmp << 1 | tmp >> 3;
         //3
         Ci = C[31 : 24];
         idx = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
         tmp = h[4] ^ s_value;
-        h_out[3] = tmp << 1;
+        h_out[3] = tmp << 1 | tmp >> 3;
         //4
         Ci = C[39 : 32];
         idx = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
         tmp = h[5] ^ s_value;
-        h_out[4] = tmp << 2;
+        h_out[4] = tmp << 2 | tmp >> 2;
         //5
         Ci = C[47 : 40];
         idx = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
         tmp = h[6] ^ s_value;
-        h_out[5] = tmp << 2;
+        h_out[5] = tmp << 2 | tmp >> 2;
         //6
         Ci = C[55 : 48];
         idx = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
         tmp = h[7] ^ s_value;
-        h_out[6] = tmp << 3;
+        h_out[6] = tmp << 3 | tmp >> 1;
         //7 
         Ci = C[63 : 56];
         idx = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};     
         tmp = h[0] ^ s_value;
-        h_out[7] = tmp << 3;
+        h_out[7] = tmp << 3 | tmp >> 1;
 
         digest = {h_out[0], h_out[1], h_out[2], h_out[3], h_out[4], h_out[5], h_out[6]};
     end
