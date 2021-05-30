@@ -53,7 +53,7 @@ assign compute_final_round = state === 1 && counter === 0;
 
 
 mainHashIteration main(
-    .idx(M6),
+    .M(M),
     .h(H_main),
     .h_out(H_main_w_o)
 );
@@ -78,7 +78,7 @@ hashRound_final hashRound_f(
 end*/
 
 //assign M6 = {M[3] ^ M[2], M[1],M[0],M[7],M[6],M[5] ^ M[4]};
-assign M6 = {M[5] ^ M[4], M[6], M[7], M[0], M[1], M[3] ^ M[2]};
+//assign M6 = {M[5] ^ M[4], M[6], M[7], M[0], M[1], M[3] ^ M[2]};
 
 always @(posedge clk or negedge rst_n) begin
 	
@@ -273,16 +273,13 @@ endmodule
  
 
 module hashRound (
-    input [5 : 0] idx, //S-box input
+    input [3 : 0] s_value, //S-box input
     input [3 : 0] h [0 : 7],
     output reg [3 : 0] h_out [0 : 7] //8 signal of 4 bits
 );
-wire [3 : 0] s_value;
+
 reg [3 : 0] tmp; 
-Sbox sbox (
-    .in (idx),
-    .out(s_value)
-);
+
     always @(*) begin
            
         //h[0]
@@ -431,16 +428,23 @@ Sbox sbox8 (
 endmodule
 
 module mainHashIteration (
-    input [5 : 0] idx,
+    input [7 : 0] M,
     input [3 : 0] h [0 : 7],
     output [3 : 0] h_out [0 : 7]
 );
 
+reg [3 : 0] s_value;
+wire [5 : 0] M6;
+assign M6 = {M[5] ^ M[4], M[6], M[7], M[0], M[1], M[3] ^ M[2]};
 
+Sbox sbox(
+    .in (M6),
+    .out (s_value)
+);
 
 wire [3 : 0] h1_out [0 : 7];
 hashRound round1 (
-    .idx(idx),
+    .s_value(s_value),
     .h(h),
     .h_out(h1_out)
 
@@ -448,7 +452,7 @@ hashRound round1 (
 wire [3 : 0] h2_out [0 : 7];
 
 hashRound round2 (
-    .idx(idx),
+    .s_value(s_value),
     .h(h1_out),
     .h_out(h2_out)
 );
@@ -456,14 +460,14 @@ hashRound round2 (
 wire [3 : 0] h3_out [0 : 7];
 
 hashRound round3 (
-    .idx(idx),
+    .s_value(s_value),
     .h(h2_out),
     .h_out(h3_out)
 
 );
 
 hashRound round4 (
-    .idx(idx),
+    .s_value(s_value),
     .h(h3_out),
     .h_out(h_out)
 );
