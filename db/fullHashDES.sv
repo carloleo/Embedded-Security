@@ -26,7 +26,7 @@ reg [63 : 0] C;
 //to store h[i] values
 reg [7 : 0] [3 : 0] h; 
 //circuit state
-reg[1 : 0] state;
+reg state;
 //message reduction to 6 bit
 wire [5 : 0] M6;
 //s-box input at last round
@@ -37,22 +37,24 @@ reg [7 : 0] [3 : 0]  H_main;
 reg [7 : 0] [3 : 0]  H_last;
 
 reg [31 : 0] digest;
+reg [7 : 0] Mr;
+reg compute;
 
 wire compute_msg;
 wire init;
 wire compute_final_round;
 
 
-assign compute_msg = counter > 0 && state === 1 && M_valid;
-assign init = state === 0 && M_valid && counter === 0;
-assign compute_final_round = state === 1 && counter === 0; 
+assign compute_state = counter > 0 && state === 1;
+assign init_state = state === 0 && M_valid && counter === 0;
+assign final_state = state === 1 && counter === 0;  
 
 
 
 
 
 mainHashIteration main(
-    .M(M),
+    .M(Mr),
     .h(H_main),
     .h_out(H_main_w_o)
 );
@@ -69,33 +71,19 @@ hashRound_final hashRound_f(
 always @(posedge clk or negedge rst_n) begin
 	
     if (!rst_n) begin
+        
         counter <= 0;
         hash_ready <= 0;
         state <= 0;
-        H_main[0] <= h0_value;
-        H_main[1] <= h1_value;
-        H_main[2] <= h2_value;
-        H_main[3] <= h3_value;
-        H_main[4] <= h4_value;
-        H_main[5] <= h5_value;
-        H_main[6] <= h6_value;
-        H_main[7] <= h7_value;
-    end else if(init) begin
-        counter <= C_in - 1;
+        compute <=0;
+
+    end else if(init_state) begin
+        counter <= C_in;
         C <= C_in;
-        H_main <= H_main_w_o;
         state <= 1;
         hash_ready <= 0;
-    end else if(compute_msg) begin
-		counter <= counter - 1;
-        H_main <= H_main_w_o;
-        //$display("Counter: %d | %b %b %b %b %b %b %b %b", counter, H_main[0], H_main[1], H_main[2], H_main[3], H_main[4], H_main[5], H_main[6], H_main[7]);
-    end else if(compute_final_round) begin //test final round
-        counter <= 0;
-        hash_ready <= 1; //final round computed 
-        state <= 0;
-        counter <= 0;
-        digest_final <= digest;
+        Mr <= M;
+        compute <= M_valid;
         H_main[0] <= h0_value;
         H_main[1] <= h1_value;
         H_main[2] <= h2_value;
@@ -104,7 +92,19 @@ always @(posedge clk or negedge rst_n) begin
         H_main[5] <= h5_value;
         H_main[6] <= h6_value;
         H_main[7] <= h7_value;
-    end else if(!M_valid) begin //Wait until next message block
+    end else if(compute_state) begin
+        if(compute === 1)begin
+            counter <= counter - 1;
+            H_main <= H_main_w_o;
+		end
+        Mr <= M;
+        compute <= M_valid;
+        //$display("Counter: %d | %b %b %b %b %b %b %b %b", counter, H_main[0], H_main[1], H_main[2], H_main[3], H_main[4], H_main[5], H_main[6], H_main[7]);
+    end else if(final_state) begin //test final round
+        hash_ready <= 1; //final round computed 
+        state <= 0;
+        digest_final <= digest;
+    end else begin 
         #0;
     end
  end
