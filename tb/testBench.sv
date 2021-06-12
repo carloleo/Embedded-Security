@@ -38,8 +38,10 @@ fullHashDES test_hash (
     initial begin
         //inizializzazione delle variabili
         reg [63 : 0] compare;
-        logic[8:0] i = 0;
-        /*begin: TEST_EMPTY
+        logic[15:0] i;
+        localparam expected_empty_digest = 32'h956F7883 ;
+        begin: TEST_EMPTY
+            $display("EMPTY TEST BEGIN");
             @(reset_deassertion);
             @(posedge clk);
             M_valid = 1'b1;
@@ -47,10 +49,13 @@ fullHashDES test_hash (
             @(posedge clk);
             M_valid = 1'b0;
             @(posedge clk);
+            @(posedge clk);
             if(hash_ready)begin
-                $display("Digest: %b", digest);
+                $display("Digest empty test: %h", digest);
+                $display("test result [ %s ] ", expected_empty_digest === digest ? "Successful" : "Failure" );
+                $display("EMPTY TEST END");
             end
-        end:  TEST_EMPTY*/
+        end:  TEST_EMPTY
 
         begin: TEST_ONE_CHAR
             //@(reset_deassertion);
@@ -62,6 +67,7 @@ fullHashDES test_hash (
             M_valid = 1'b0;
             @(posedge clk);
             @(posedge clk);
+            @(posedge clk);
             if(hash_ready)begin
                 $display("Digest: %h", digest);
             end
@@ -71,7 +77,7 @@ fullHashDES test_hash (
             $display("SAME MESSAGE SAME HASH BEGIN");
             @(posedge clk);
             C_in = 64'd50;
-            for ( i = 0; i < 64'd50 ; i++) begin
+            for (i = 0; i < 64'd50 ; i++) begin
                 M = i;
                 M_valid = 1'b1;
                 @(posedge clk);
@@ -79,6 +85,7 @@ fullHashDES test_hash (
             M_valid = 1'b0;
             @(posedge clk)
             @(posedge clk)
+            @(posedge clk);
             if(hash_ready)begin
                 $display("FIRST DIGEST %h ", digest);
                 compare = digest;
@@ -96,9 +103,10 @@ fullHashDES test_hash (
             M_valid = 1'b0;
             @(posedge clk);
             @(posedge clk);
+            @(posedge clk);
             if(hash_ready) begin
                 $display("SECOND DIGEST %h", digest);
-                $display("result [ %s ]", compare === digest ? "Successful" : "Failure" );
+                $display("test result [ %s ]", compare === digest ? "Successful" : "Failure" );
                 $display("SAME MESSAGE SAME HASH END");
             end
             @(posedge clk);
@@ -112,12 +120,31 @@ fullHashDES test_hash (
             M_valid = 1'b0;
             @(posedge clk);
             @(posedge clk);
+            @(posedge clk);
             if(hash_ready) begin
                 $display("Digest changed: %h", digest);
-                $display("test  %s", compare === digest ? "Failure" : "Successful" );
+                $display("test result  [ %s ]", compare === digest ? "Failure" : "Successful" );
                 $display("CHANGED MESSAGE CHANGED HASH END");
             end
         end: TEST_HASH
+        begin: TEST_SAME_CHAR
+            $display("SAME CHAR BEGIN");
+            @(posedge clk);
+            C_in = 64'd400;
+            M_valid = 1'b1;
+            for (i  = 0 ; i < 64'd400 ; i++ ) begin
+                M = 8'd65;
+                @(posedge clk);
+            end
+            M_valid = 1'b0;
+            @(posedge clk);
+            @(posedge clk);
+            @(posedge clk);
+            if(hash_ready) begin
+                $display("Digest computed: %h", digest);
+                $display("SAME CHAR END");
+            end
+        end:  TEST_SAME_CHAR
 
         $stop;
     end
