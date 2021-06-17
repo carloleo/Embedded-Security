@@ -7,7 +7,7 @@
         input [63 : 0] C_in, //length 
         input [7 : 0] M,
         output reg hash_ready,
-        output reg [31 : 0] digest_final
+        output reg [31 : 0] digest_out
     );
     //constants 
     localparam h0_value = 4'h4;
@@ -46,7 +46,7 @@
 
     //control signals
     assign compute_state = counter > 0 && state === 1;
-    assign init_state = state === 0 && M_valid /*&& counter === 0*/;
+    assign init_state = state === 0 && M_valid;
     assign final_state = state === 1 && counter === 0;  
 
 
@@ -69,18 +69,12 @@
     always @(posedge clk or negedge rst_n) begin
         
         if (!rst_n) begin //setting known state
-            counter <= 0;
+
+            //counter <= 0;
             hash_ready <= 0;
             state <= 0;
-            M_valid_r <=0;
-            //H_main[0] <= h0_value;
-            //H_main[1] <= h1_value;
-            //H_main[2] <= h2_value;
-            //H_main[3] <= h3_value;
-            //H_main[4] <= h4_value;
-            //H_main[5] <= h5_value;
-            //H_main[6] <= h6_value;
-            //H_main[7] <= h7_value;
+            //M_valid_r <=0;
+
         end else if(init_state) begin //initializing digest computation
             counter <= C_in;
             C <= C_in;
@@ -107,7 +101,7 @@
         end else if(final_state) begin //digest is ready
             hash_ready <= 1; 
             state <= 0;
-            digest_final <= digest;
+            digest_out <= digest;
         end else begin //nop
             #0;
         end

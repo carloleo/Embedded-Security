@@ -27,7 +27,7 @@ fullHashDES test_hash (
     ,.C_in 			(C_in)  
     ,.M 			(M)
     ,.hash_ready 	(hash_ready)
-    ,.digest_final 		(digest)
+    ,.digest_out 		(digest)
   );
 
     initial begin
@@ -59,7 +59,6 @@ fullHashDES test_hash (
 
         begin: TEST_ONE_CHAR
             $display("ONE CHAR TEST BEGIN");
-            //@(reset_deassertion);
             @(posedge clk);
             M_valid = 1'b1;
             C_in = 64'd1;
@@ -73,7 +72,7 @@ fullHashDES test_hash (
                 $display("Digest: %h", digest);
             end
             $display("ONE CHAR TEST END");
-        end: TEST_ONE_CHAR
+        end: TEST_ONE_CHAR 
 
         begin: TEST_HASH
             $display("SAME MESSAGE SAME HASH BEGIN");
@@ -102,9 +101,7 @@ fullHashDES test_hash (
                 @(posedge clk);
                 @(posedge clk);
             end
-            M_valid = 1'b0;
-            @(posedge clk);
-            @(posedge clk);
+        
             @(posedge clk);
             if(hash_ready) begin
                 $display("SECOND DIGEST %h", digest);
@@ -114,7 +111,7 @@ fullHashDES test_hash (
             @(posedge clk);
             $display("CHANGED MESSAGE CHANGED HASH BEGIN");
             C_in = 64'd255;
-            for (i  = 0 ; i < 64'd255 ; i++ ) begin
+            for (i  = 0 ; i < C_in ; i++ ) begin
                 M = i;
                 M_valid = 1'b1;
                 @(posedge clk);
@@ -129,13 +126,14 @@ fullHashDES test_hash (
                 $display("CHANGED MESSAGE CHANGED HASH END");
             end
         end: TEST_HASH
-        begin: TEST_SAME_CHAR
-            $display("SAME CHAR BEGIN");
+
+        begin: TEST_LONG_MESSAGE
+            $display("LONG_MESSAGE BEGIN");
             @(posedge clk);
-            C_in = 64'd400;
+            C_in = 64'd5073;
             M_valid = 1'b1;
             for (i  = 0 ; i < C_in ; i++ ) begin
-                M = 8'd65;
+                M = i;
                 @(posedge clk);
             end
             M_valid = 1'b0;
@@ -144,9 +142,9 @@ fullHashDES test_hash (
             @(posedge clk);
             if(hash_ready) begin
                 $display("Digest computed: %h", digest);
-                $display("SAME CHAR END");
+                $display("LONG_MESSAGE END");
             end
-        end:  TEST_SAME_CHAR
+        end:  TEST_LONG_MESSAGE
         $stop;
     end
 endmodule
