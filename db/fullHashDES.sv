@@ -19,7 +19,7 @@
     localparam h6_value = 4'h0;
     localparam h7_value = 4'h3;
 
-    //missing message byte to compute 
+    //missing message byte to M_valid_r 
     reg [63 : 0] counter;
     //to save input message length
     reg [63 : 0] C;
@@ -28,7 +28,7 @@
     //circuit state
     reg state;
     //store message byte
-    reg [7 : 0] Mr;
+    reg [7 : 0] M_r;
     //message reduction to 6 bit
     wire [5 : 0] M6;
     //s-box input at last round
@@ -38,26 +38,26 @@
     //contain result of main hash rounds
     reg [7 : 0] [3 : 0]  H_main;
     //contain result of final round
-    reg [7 : 0] [3 : 0]  H_last;
-    //digest computed 
+    //reg [7 : 0] [3 : 0]  H_last;
+    //digest M_valid_rd 
     reg [31 : 0] digest;
     //store M_valid 
-    reg compute;
+    reg M_valid_r;
 
     //control signals
     assign compute_state = counter > 0 && state === 1;
-    assign init_state = state === 0 && M_valid && counter === 0;
+    assign init_state = state === 0 && M_valid /*&& counter === 0*/;
     assign final_state = state === 1 && counter === 0;  
 
 
-    //compute main hash rounds
+    //M_valid_r main hash rounds
     mainHashIteration main(
-        .M(Mr),
+        .M(M_r),
         .h(H_main),
         .h_out(H_main_w_o)
     );
 
-    //compute final hash round
+    //M_valid_r final hash round
     hashRound_final hashRound_f(
         .C (C),
         .h(H_main),
@@ -72,22 +72,22 @@
             counter <= 0;
             hash_ready <= 0;
             state <= 0;
-            compute <=0;
-            H_main[0] <= h0_value;
-            H_main[1] <= h1_value;
-            H_main[2] <= h2_value;
-            H_main[3] <= h3_value;
-            H_main[4] <= h4_value;
-            H_main[5] <= h5_value;
-            H_main[6] <= h6_value;
-            H_main[7] <= h7_value;
+            M_valid_r <=0;
+            //H_main[0] <= h0_value;
+            //H_main[1] <= h1_value;
+            //H_main[2] <= h2_value;
+            //H_main[3] <= h3_value;
+            //H_main[4] <= h4_value;
+            //H_main[5] <= h5_value;
+            //H_main[6] <= h6_value;
+            //H_main[7] <= h7_value;
         end else if(init_state) begin //initializing digest computation
             counter <= C_in;
             C <= C_in;
             state <= 1;
             hash_ready <= 0;
-            Mr <= M;
-            compute <= M_valid;
+            M_r <= M;
+            M_valid_r <= M_valid;
             H_main[0] <= h0_value;
             H_main[1] <= h1_value;
             H_main[2] <= h2_value;
@@ -97,12 +97,12 @@
             H_main[6] <= h6_value;
             H_main[7] <= h7_value;
         end else if(compute_state) begin //updating digest computation
-            if(compute === 1)begin
+            if(M_valid_r === 1)begin
                 counter <= counter - 1; 
                 H_main <= H_main_w_o;
             end
-            Mr <= M;
-            compute <= M_valid;
+            M_r <= M;
+            M_valid_r <= M_valid;
             //$display("Counter: %d | %b %b %b %b %b %b %b %b", counter, H_main[0], H_main[1], H_main[2], H_main[3], H_main[4], H_main[5], H_main[6], H_main[7]);
         end else if(final_state) begin //digest is ready
             hash_ready <= 1; 
@@ -229,7 +229,7 @@ endmodule
 
  
 /*
-* @brief: compute ith round
+* @brief: M_valid_r ith round
 */
 module hashRound (
     input [3 : 0] s_value, //Sbox output

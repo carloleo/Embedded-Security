@@ -58,6 +58,7 @@ fullHashDES test_hash (
         end:  TEST_EMPTY
 
         begin: TEST_ONE_CHAR
+            $display("ONE CHAR TEST BEGIN");
             //@(reset_deassertion);
             @(posedge clk);
             M_valid = 1'b1;
@@ -71,13 +72,14 @@ fullHashDES test_hash (
             if(hash_ready)begin
                 $display("Digest: %h", digest);
             end
+            $display("ONE CHAR TEST END");
         end: TEST_ONE_CHAR
 
         begin: TEST_HASH
             $display("SAME MESSAGE SAME HASH BEGIN");
             @(posedge clk);
-            C_in = 64'd50;
-            for (i = 0; i < 64'd50 ; i++) begin
+            C_in = 64'd156;
+            for (i = 0; i < C_in ; i++) begin
                 M = i;
                 M_valid = 1'b1;
                 @(posedge clk);
@@ -91,8 +93,8 @@ fullHashDES test_hash (
                 compare = digest;
             end
             @(posedge clk);
-            C_in = 64'd50;
-            for ( i = 0; i < 64'd50 ; i++) begin
+            C_in = 64'd156;
+            for ( i = 0; i < C_in ; i++) begin
                 M = i;
                 M_valid = 1'b1;
                 @(posedge clk)
@@ -111,8 +113,8 @@ fullHashDES test_hash (
             end
             @(posedge clk);
             $display("CHANGED MESSAGE CHANGED HASH BEGIN");
-            C_in = 64'd49;
-            for (i  = 0 ; i < 64'd49 ; i++ ) begin
+            C_in = 64'd255;
+            for (i  = 0 ; i < 64'd255 ; i++ ) begin
                 M = i;
                 M_valid = 1'b1;
                 @(posedge clk);
@@ -132,7 +134,7 @@ fullHashDES test_hash (
             @(posedge clk);
             C_in = 64'd400;
             M_valid = 1'b1;
-            for (i  = 0 ; i < 64'd400 ; i++ ) begin
+            for (i  = 0 ; i < C_in ; i++ ) begin
                 M = 8'd65;
                 @(posedge clk);
             end
@@ -145,7 +147,6 @@ fullHashDES test_hash (
                 $display("SAME CHAR END");
             end
         end:  TEST_SAME_CHAR
-
         $stop;
     end
 endmodule
