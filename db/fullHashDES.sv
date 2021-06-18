@@ -1,5 +1,4 @@
-    //Per quartus: nome file.sv deve essere lo stesso del nome modulo
-
+    
     module fullHashDES(
         input clk,
         input M_valid,
@@ -9,7 +8,7 @@
         output reg hash_ready,
         output reg [31 : 0] digest_out
     );
-    //constants 
+    //digest init values
     localparam h0_value = 4'h4;
     localparam h1_value = 4'hB;
     localparam h2_value = 4'h7;
@@ -19,29 +18,20 @@
     localparam h6_value = 4'h0;
     localparam h7_value = 4'h3;
 
-    //missing message byte to M_valid_r 
+    //remaining bytes to process
     reg [63 : 0] counter;
-    //to save input message length
+    //saves input message length
     reg [63 : 0] C;
-    //to store h[i] values
-    reg [7 : 0] [3 : 0] h; 
-    //circuit state
+    //determines if the module waits for a new message or a new byte of the current one
     reg state;
-    //store message byte
+    //store message byte to process
     reg [7 : 0] M_r;
-    //message reduction to 6 bit
-    wire [5 : 0] M6;
-    //s-box input at last round
-    wire [7 : 0] [5 : 0] C6;
     //feedback wire
     wire [7 : 0] [3 : 0] H_main_w_o;
     //contain result of main hash rounds
     reg [7 : 0] [3 : 0]  H_main;
-    //contain result of final round
-    //reg [7 : 0] [3 : 0]  H_last;
-    //digest M_valid_rd 
     reg [31 : 0] digest;
-    //store M_valid 
+    //store M_valid to known if the value of M_r needs to be processed
     reg M_valid_r;
 
     //control signals
@@ -50,14 +40,14 @@
     assign final_state = state === 1 && counter === 0;  
 
 
-    //M_valid_r main hash rounds
+    //main hash rounds
     mainHashIteration main(
         .M(M_r),
         .h(H_main),
         .h_out(H_main_w_o)
     );
 
-    //M_valid_r final hash round
+    //final hash round
     hashRound_final hashRound_f(
         .C (C),
         .h(H_main),
@@ -68,12 +58,10 @@
     //state machine 
     always @(posedge clk or negedge rst_n) begin
         
-        if (!rst_n) begin //setting known state
+        if (!rst_n) begin //set in idle state
 
-            //counter <= 0;
             hash_ready <= 0;
             state <= 0;
-            //M_valid_r <=0;
 
         end else if(init_state) begin //initializing digest computation
             counter <= C_in;
@@ -90,15 +78,14 @@
             H_main[5] <= h5_value;
             H_main[6] <= h6_value;
             H_main[7] <= h7_value;
-        end else if(compute_state) begin //updating digest computation
+        end else if(compute_state) begin //process the current byte and store the next one
             if(M_valid_r === 1)begin
                 counter <= counter - 1; 
                 H_main <= H_main_w_o;
             end
             M_r <= M;
             M_valid_r <= M_valid;
-            //$display("Counter: %d | %b %b %b %b %b %b %b %b", counter, H_main[0], H_main[1], H_main[2], H_main[3], H_main[4], H_main[5], H_main[6], H_main[7]);
-        end else if(final_state) begin //digest is ready
+        end else if(final_state) begin //execute the final round and set the output as ready
             hash_ready <= 1; 
             state <= 0;
             digest_out <= digest;
@@ -118,7 +105,6 @@ module Sbox (
     always @(*) begin
         row = {in[5], in[0]};
         colum = in[4 : 1];
-        //$display("M6: %b - COLUMN: %b", in, colum);
         case (colum)
             4'b0000 : case (row)
                         2'b00 :  out = 4'b0010; 
@@ -221,10 +207,7 @@ module Sbox (
 endmodule
 
 
- 
-/*
-* @brief: M_valid_r ith round
-*/
+
 module hashRound (
     input [3 : 0] s_value, //Sbox output
     input [7 : 0] [3 : 0] h, //hash values of previous round
@@ -320,59 +303,43 @@ Sbox sbox8 (
         //h[0]
         Ci = C[63 : 56];
         idx[0] = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
-        //idx[0] = {Ci[6], Ci[4], Ci[5] ^ Ci[0], Ci[2], Ci[3], Ci[7] ^ Ci[1]};
         tmp = h[1] ^ s_value[0];
         h_out[0] = tmp;
-        //$display("idx: %b | Sval: %b", idx[0], s_value[0]);
         //h[1]
         Ci = C[55 : 48];
         idx[1] = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
-        //idx[1] = {Ci[6], Ci[4], Ci[5] ^ Ci[0], Ci[2], Ci[3], Ci[7] ^ Ci[1]};
         tmp = h[2] ^ s_value[1];
         h_out[1] = tmp;
-        //$display("idx: %b | Sval: %b", idx[1], s_value[1]);
         //h[2]
         Ci = C[47 : 40];
         idx[2] = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
-        //idx[2] = {Ci[6], Ci[4], Ci[5] ^ Ci[0], Ci[2], Ci[3], Ci[7] ^ Ci[1]};
         tmp = h[3] ^ s_value[2];
         h_out[2] = (tmp << 1) | (tmp >> 3);
-        //$display("idx: %b | Sval: %b", idx[2], s_value[2]);
         //3
         Ci = C[39 : 32];
         idx[3] = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
-        //idx[3] = {Ci[6], Ci[4], Ci[5] ^ Ci[0], Ci[2], Ci[3], Ci[7] ^ Ci[1]};
         tmp = h[4] ^ s_value[3];
         h_out[3] = (tmp << 1) | (tmp >> 3);
-        //$display("idx: %b | Sval: %b", idx[3], s_value[3]);
         //4
         Ci = C[31 : 24];
         idx[4] = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
-        //idx[4] = {Ci[6], Ci[4], Ci[5] ^ Ci[0], Ci[2], Ci[3], Ci[7] ^ Ci[1]};
         tmp = h[5] ^ s_value[4];
         h_out[4] = (tmp << 2) | (tmp >> 2);
-        //$display("idx: %b | Sval: %b", idx[4], s_value[4]);
         //5
         Ci = C[23 : 16];
         idx[5] = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
-        //idx[5] = {Ci[6], Ci[4], Ci[5] ^ Ci[0], Ci[2], Ci[3], Ci[7] ^ Ci[1]};
         tmp = h[6] ^ s_value[5];
         h_out[5] = (tmp << 2) | (tmp >> 2);
-        //$display("idx: %b | Sval: %b", idx[5], s_value[5]);
         //6
         Ci = C[15 : 8];
         idx[6] = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
-        //idx[6] = {Ci[6], Ci[4], Ci[5] ^ Ci[0], Ci[2], Ci[3], Ci[7] ^ Ci[1]};
         tmp = h[7] ^ s_value[6];
         h_out[6] = (tmp << 3) | (tmp >> 1);
-        //$display("idx: %b | Sval: %b",  idx[6], s_value[6]);
         //7 
         Ci = C[7 : 0];
-        idx[7] = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
-        //idx[7] = {Ci[6], Ci[4], Ci[5] ^ Ci[0], Ci[2], Ci[3], Ci[7] ^ Ci[1]};     
+        idx[7] = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};     
         tmp = h[0] ^ s_value[7];
         h_out[7] = (tmp << 3) | (tmp >> 1);
-        //$display("idx: %b | Sval: %b", idx[7], s_value[7]);
         digest = {h_out[0], h_out[1], h_out[2], h_out[3], h_out[4], h_out[5], h_out[6], h_out[7]};
        
 
@@ -390,7 +357,6 @@ module mainHashIteration (
 
 reg [3 : 0] s_value;
 wire [5 : 0] M6;
-//assign M6 = {M[5] ^ M[4], M[6], M[7], M[0], M[1], M[3] ^ M[2]};
 assign M6 = {M[3] ^ M[2], M[1], M[0], M[7], M[6], M[5] ^ M[4]};
 Sbox sbox(
     .in (M6),

@@ -1,10 +1,3 @@
-/*
-    messaggio vuoto
-    messaggio in input coninuo e con pausa 
-    stesso messaggio stessa digest consecutivamente
-    diverso messaggio diversa digest
-    variabalità hash -> messaggio con 1 byte in meno -> digest differente
-*/
 
 module testBench;
 
@@ -36,7 +29,6 @@ fullHashDES test_hash (
     end
 
     initial begin
-        //inizializzazione delle variabili
         reg [63 : 0] compare;
         logic[15:0] i;
         localparam expected_empty_digest = 32'h956F7883 ;
