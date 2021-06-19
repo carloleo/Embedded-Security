@@ -32,6 +32,7 @@ fullHashDES test_hash (
         reg [63 : 0] compare;
         logic[15:0] i;
         localparam expected_empty_digest = 32'h956F7883 ;
+        localparam expected_digest = 32'h2dd99066;
         begin: TEST_EMPTY
             $display("EMPTY TEST BEGIN");
             @(reset_deassertion);
@@ -48,7 +49,7 @@ fullHashDES test_hash (
                 $display("EMPTY TEST END");
             end
         end:  TEST_EMPTY
-
+        
         begin: TEST_ONE_CHAR
             $display("ONE CHAR TEST BEGIN");
             @(posedge clk);
@@ -62,6 +63,7 @@ fullHashDES test_hash (
             @(posedge clk);
             if(hash_ready)begin
                 $display("Digest: %h", digest);
+                $display("test result [ %s ] ", expected_digest === digest ? "Successful" : "Failure" );
             end
             $display("ONE CHAR TEST END");
         end: TEST_ONE_CHAR 

@@ -340,6 +340,7 @@ Sbox sbox8 (
         idx[7] = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};     
         tmp = h[0] ^ s_value[7];
         h_out[7] = (tmp << 3) | (tmp >> 1);
+        
         digest = {h_out[0], h_out[1], h_out[2], h_out[3], h_out[4], h_out[5], h_out[6], h_out[7]};
        
 
