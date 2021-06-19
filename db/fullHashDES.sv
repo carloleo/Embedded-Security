@@ -1,9 +1,12 @@
+    /*
+    * @brief: main module 
+    */
     
     module fullHashDES(
         input clk,
         input M_valid,
         input rst_n,
-        input [63 : 0] C_in, //length 
+        input [63 : 0] C_in, 
         input [7 : 0] M,
         output reg hash_ready,
         output reg [31 : 0] digest_out
@@ -20,18 +23,19 @@
 
     //remaining bytes to process
     reg [63 : 0] counter;
-    //saves input message length
+    //store input message length
     reg [63 : 0] C;
-    //determines if the module waits for a new message or a new byte of the current one
+    //determines if the circuit waits for a new message or a new byte of the current one
     reg state;
     //store message byte to process
     reg [7 : 0] M_r;
     //feedback wire
     wire [7 : 0] [3 : 0] H_main_w_o;
-    //contain result of main hash rounds
+    //contain hash chunks bits
     reg [7 : 0] [3 : 0]  H_main;
+    //contain result of hashRound_final instance
     reg [31 : 0] digest;
-    //store M_valid to known if the value of M_r needs to be processed
+    //store M_valid to know if the mainHashIteration result on M_r has to be considerd valid 
     reg M_valid_r;
 
     //control signals
@@ -40,17 +44,17 @@
     assign final_state = state === 1 && counter === 0;  
 
 
-    //main hash rounds
+
     mainHashIteration main(
-        .M(M_r),
+        .M(M_r), 
         .h(H_main),
         .h_out(H_main_w_o)
     );
 
-    //final hash round
+    
     hashRound_final hashRound_f(
-        .C (C),
-        .h(H_main),
+        .C (C), 
+        .h(H_main), 
         .digest(digest)
     );
 
@@ -58,11 +62,9 @@
     //state machine 
     always @(posedge clk or negedge rst_n) begin
         
-        if (!rst_n) begin //set in idle state
-
+        if (!rst_n) begin //set idle state
             hash_ready <= 0;
             state <= 0;
-
         end else if(init_state) begin //initializing digest computation
             counter <= C_in;
             C <= C_in;
@@ -78,14 +80,14 @@
             H_main[5] <= h5_value;
             H_main[6] <= h6_value;
             H_main[7] <= h7_value;
-        end else if(compute_state) begin //process the current byte and store the next one
-            if(M_valid_r === 1)begin
+        end else if(compute_state) begin 
+            if(M_valid_r === 1)begin //if sampled message byte is valid then hash function chunks are updated
                 counter <= counter - 1; 
                 H_main <= H_main_w_o;
             end
-            M_r <= M;
+            M_r <= M; //keep sampling
             M_valid_r <= M_valid;
-        end else if(final_state) begin //execute the final round and set the output as ready
+        end else if(final_state) begin //sampling hashRound_f result and set the output as ready
             hash_ready <= 1; 
             state <= 0;
             digest_out <= digest;
@@ -95,7 +97,9 @@
     end
 endmodule
 
-
+/*
+* @brief: DES s-box implementation 
+*/
 module Sbox (
     input [5 : 0] in,
     output reg [3 : 0] out
@@ -207,7 +211,9 @@ module Sbox (
 endmodule
 
 
-
+/*
+* @brief: compute main round
+*/
 module hashRound (
     input [3 : 0] s_value, //Sbox output
     input [7 : 0] [3 : 0] h, //hash values of previous round
@@ -247,7 +253,9 @@ reg [3 : 0] tmp;
 endmodule
 
 
-
+/*
+*   @brief: compute final round
+*/
 module hashRound_final (
     input [63 : 0] C, //message size 
     input [7 : 0] [3 : 0] h, //main hash iterations result values 
@@ -315,32 +323,31 @@ Sbox sbox8 (
         idx[2] = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
         tmp = h[3] ^ s_value[2];
         h_out[2] = (tmp << 1) | (tmp >> 3);
-        //3
+        //h[3]
         Ci = C[39 : 32];
         idx[3] = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
         tmp = h[4] ^ s_value[3];
         h_out[3] = (tmp << 1) | (tmp >> 3);
-        //4
+        //h[4]
         Ci = C[31 : 24];
         idx[4] = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
         tmp = h[5] ^ s_value[4];
         h_out[4] = (tmp << 2) | (tmp >> 2);
-        //5
+        //h[5]
         Ci = C[23 : 16];
         idx[5] = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
         tmp = h[6] ^ s_value[5];
         h_out[5] = (tmp << 2) | (tmp >> 2);
-        //6
+        //h[6]
         Ci = C[15 : 8];
         idx[6] = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};
         tmp = h[7] ^ s_value[6];
         h_out[6] = (tmp << 3) | (tmp >> 1);
-        //7 
+        //h[7] 
         Ci = C[7 : 0];
         idx[7] = {Ci[7] ^ Ci[1], Ci[3], Ci[2], Ci[5] ^ Ci[0], Ci[4], Ci[6]};     
         tmp = h[0] ^ s_value[7];
         h_out[7] = (tmp << 3) | (tmp >> 1);
-        
         digest = {h_out[0], h_out[1], h_out[2], h_out[3], h_out[4], h_out[5], h_out[6], h_out[7]};
        
 
@@ -349,7 +356,9 @@ Sbox sbox8 (
 
 endmodule
 
-
+/*
+* @brief: compute four iteration of main round
+*/
 module mainHashIteration (
     input [7 : 0] M,
     input [7 : 0] [3 : 0] h,

@@ -1,3 +1,6 @@
+/*
+* module test 
+*/
 
 module testBench;
 
@@ -13,6 +16,7 @@ reg [63 : 0] C_in;
 reg [7 : 0] M;
 reg [31 : 0] digest;
 
+//module instancing
 fullHashDES test_hash (
      .clk           (clk)
     ,.rst_n         (rst_n)
@@ -29,40 +33,41 @@ fullHashDES test_hash (
     end
 
     initial begin
+        //utility 
         reg [63 : 0] compare;
         logic[15:0] i;
+        //expected values
         localparam expected_empty_digest = 32'h956F7883 ;
         localparam expected_digest = 32'h2dd99066;
         begin: TEST_EMPTY
             $display("EMPTY TEST BEGIN");
-            @(reset_deassertion);
-            @(posedge clk);
+            @(reset_deassertion); //waiting for reset deassertion
+            @(posedge clk); //wainting for positive clock edge
             M_valid = 1'b1;
             C_in = 64'd0;
             @(posedge clk);
             M_valid = 1'b0;
             @(posedge clk);
             @(posedge clk);
-            if(hash_ready)begin
+            if(hash_ready)begin //testing of expected behaviour the digest must be ready
                 $display("Digest empty test: %h", digest);
                 $display("test result [ %s ] ", expected_empty_digest === digest ? "Successful" : "Failure" );
                 $display("EMPTY TEST END");
             end
         end:  TEST_EMPTY
-        
         begin: TEST_ONE_CHAR
             $display("ONE CHAR TEST BEGIN");
             @(posedge clk);
             M_valid = 1'b1;
             C_in = 64'd1;
-            M = 8'd65;
+            M = 8'd65; // A
             @(posedge clk);
             M_valid = 1'b0;
             @(posedge clk);
             @(posedge clk);
             @(posedge clk);
-            if(hash_ready)begin
-                $display("Digest: %h", digest);
+            if(hash_ready)begin //testing of expected behaviour the digest must be ready
+                $display("Digest one char test: %h", digest); //expected digest pre-computed value by paper and pen
                 $display("test result [ %s ] ", expected_digest === digest ? "Successful" : "Failure" );
             end
             $display("ONE CHAR TEST END");
@@ -71,7 +76,7 @@ fullHashDES test_hash (
         begin: TEST_HASH
             $display("SAME MESSAGE SAME HASH BEGIN");
             @(posedge clk);
-            C_in = 64'd156;
+            C_in = 64'd756;
             for (i = 0; i < C_in ; i++) begin
                 M = i;
                 M_valid = 1'b1;
@@ -81,13 +86,13 @@ fullHashDES test_hash (
             @(posedge clk)
             @(posedge clk)
             @(posedge clk);
-            if(hash_ready)begin
+            if(hash_ready)begin //testing of expected behaviour the digest must be ready
                 $display("FIRST DIGEST %h ", digest);
                 compare = digest;
             end
             @(posedge clk);
-            C_in = 64'd156;
-            for ( i = 0; i < C_in ; i++) begin
+            C_in = 64'd756; 
+            for ( i = 0; i < C_in ; i++) begin 
                 M = i;
                 M_valid = 1'b1;
                 @(posedge clk)
@@ -95,16 +100,15 @@ fullHashDES test_hash (
                 @(posedge clk);
                 @(posedge clk);
             end
-        
-            @(posedge clk);
-            if(hash_ready) begin
-                $display("SECOND DIGEST %h", digest);
+             @(posedge clk);
+            if(hash_ready) begin//testing of expected behaviour the digest must be ready
+                $display("SECOND DIGEST %h", digest); //same digest expected
                 $display("test result [ %s ]", compare === digest ? "Successful" : "Failure" );
                 $display("SAME MESSAGE SAME HASH END");
             end
             @(posedge clk);
             $display("CHANGED MESSAGE CHANGED HASH BEGIN");
-            C_in = 64'd255;
+            C_in = 64'd755;//one message byte is being changed
             for (i  = 0 ; i < C_in ; i++ ) begin
                 M = i;
                 M_valid = 1'b1;
@@ -114,13 +118,12 @@ fullHashDES test_hash (
             @(posedge clk);
             @(posedge clk);
             @(posedge clk);
-            if(hash_ready) begin
-                $display("Digest changed: %h", digest);
+            if(hash_ready) begin //testing of expected behaviour the digest must be ready
+                $display("DIGEST CHANGED: %h", digest);//different hash expected
                 $display("test result  [ %s ]", compare === digest ? "Failure" : "Successful" );
                 $display("CHANGED MESSAGE CHANGED HASH END");
             end
         end: TEST_HASH
-
         begin: TEST_LONG_MESSAGE
             $display("LONG_MESSAGE BEGIN");
             @(posedge clk);
@@ -134,7 +137,7 @@ fullHashDES test_hash (
             @(posedge clk);
             @(posedge clk);
             @(posedge clk);
-            if(hash_ready) begin
+            if(hash_ready) begin //testing of expected behaviour the digest must be ready
                 $display("Digest computed: %h", digest);
                 $display("LONG_MESSAGE END");
             end
